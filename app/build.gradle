@@ -23,4 +23,5 @@ dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     compile files('libs/EJML-core-0.26.jar')
     compile files('libs/EJML-equation-0.26.jar')
+    compile files('libs/JJIL-Android-12-22-08.jar')
 }

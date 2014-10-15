@@ -10,7 +10,7 @@ import java.util.List;
 /**
  * Created by Era on 10/7/2014.
  */
-public class MyFaceRecognizer extends FaceRecognizer
+public class MyFaceRecognizer
 {
     public MyFaceRecognizer()
     {

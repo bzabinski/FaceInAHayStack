@@ -2,16 +2,13 @@ package com.mathengie.faceinahaystack;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.graphics.PointF;
 import android.media.FaceDetector;
 import android.media.FaceDetector.Face;
+import android.util.Log;
 
-import org.opencv.android.Utils;
-import org.opencv.contrib.FaceRecognizer;
-import org.opencv.core.Algorithm;
-import org.opencv.core.CvType;
-import org.opencv.core.Mat;
-import org.opencv.core.Scalar;
+import org.ejml.simple.SimpleMatrix;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -22,9 +19,10 @@ import java.util.List;
  */
 public class FaceFinder {
 
-    List<Mat> matrices = new ArrayList<Mat>();
+    List<double[]> pixelsList = new ArrayList<double[]>();
+    SimpleMatrix totalMatrix;
+    SimpleMatrix testMatrix;
     List<Integer> labels = new ArrayList<Integer>();
-    Mat labelsVector = null;
 
     public FaceFinder(File imagesDir)
     {
@@ -44,11 +42,24 @@ public class FaceFinder {
                 PointF midPoint = new PointF();
                 foundFaces[counter].getMidPoint(midPoint);
                 float eyeDist = foundFaces[counter].eyesDistance();
-                Bitmap lilFace = Bitmap.createBitmap(photoBM, (int) (midPoint.x - eyeDist), (int) (midPoint.y - eyeDist), (int) eyeDist * 2, (int) eyeDist * 2);
-                Bitmap tempFace = lilFace.copy(Bitmap.Config.RGB_565, true);
-                Mat tmpMat = new Mat (lilFace.getWidth(), lilFace.getHeight(), CvType.CV_8UC1);
-                Utils.bitmapToMat(tempFace, tmpMat);
-                matrices.add(tmpMat);
+                Bitmap lilFace = Bitmap.createBitmap(photoBM, (int) (midPoint.x - 31), (int) (midPoint.y - 32), 64, 64);
+                Bitmap tempFace = lilFace.copy(Bitmap.Config.ARGB_8888, true);
+                int[] pixels = new int[tempFace.getHeight() * tempFace.getWidth()];
+                tempFace.getPixels(pixels, 0, tempFace.getWidth(), 0, 0, tempFace.getWidth(), tempFace.getHeight());
+
+                double[] pixelsD = new double[pixels.length];
+
+                for (int i = 0; i < pixels.length; i++)
+                {
+                    int red = Color.red(pixels[i]);
+                    int green = Color.green(pixels[i]);
+                    int blue = Color.blue(pixels[i]);
+                    double gray = (red * 0.3 + green * 0.59 + blue * 0.11);
+
+                    pixelsD[i] = gray;
+                }
+
+                pixelsList.add(pixelsD);
                 labels.add(labelID);
                 counter++;
 
@@ -57,13 +68,40 @@ public class FaceFinder {
             labelID++;
         }
 
-        labelsVector = new Mat(labels.size(), 1, CvType.CV_8U);
+        totalMatrix = new SimpleMatrix(pixelsList.toArray(new double[pixelsList.size()][64 * 64]));
+    }
 
-        for(int i = 0; i < labels.size(); i++)
+    public void find(Bitmap face)
+    {
+        int[] pixels = new int[face.getHeight() * face.getWidth()];
+        face.getPixels(pixels, 0, face.getWidth(), 0, 0, face.getWidth(), face.getHeight());
+
+        double[] pixelsD = new double[pixels.length];
+
+        for (int i = 0; i < pixels.length; i++)
         {
-            labelsVector.put(i, 1, labels.get(i));
+            int red = Color.red(pixels[i]);
+            int green = Color.green(pixels[i]);
+            int blue = Color.blue(pixels[i]);
+            double gray = (red * 0.3 + green * 0.59 + blue * 0.11);
+
+            pixelsD[i] = gray;
         }
 
-        Algorithm.
+        testMatrix = new SimpleMatrix(64 * 64, 1, true, pixelsD);
+
+        int N;
+        int K;
+        SimpleMatrix gamma_x;
+        int[] z_x;
+        SimpleMatrix xk_temp;
+        SimpleMatrix del_x_vec;
+        SimpleMatrix pk_temp;
+        SimpleMatrix dk;
+        int epsilon;
+        boolean isNonnegative = true;
+        final int eps = 1;
+        double tolerance = 0.001;
+
     }
 }
